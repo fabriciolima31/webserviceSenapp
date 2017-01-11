@@ -8,5 +8,5 @@ Aplicação que tem como finalidade fornecer formas alternativas de interação 
 
 ### Registro
 ### Login
-### Estatísticas de Consultas já votadas
+### Estatísticas de Consultas Votadas
 ### Listagem das Consultas Públicas

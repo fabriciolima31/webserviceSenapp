@@ -76,13 +76,13 @@ $app->post('/register', function() use ($app) {
 
             if ($res == USER_CREATED_SUCCESSFULLY) {
                 $response["error"] = false;
-                $response["message"] = "You are successfully registered";
+                $response["message"] = "Você foi registrado com Sucesso!";
             } else if ($res == USER_CREATE_FAILED) {
                 $response["error"] = true;
-                $response["message"] = "Oops! An error occurred while registereing";
+                $response["message"] = "Oops! Ocorreu um erro durante o registro";
             } else if ($res == USER_ALREADY_EXISTED) {
                 $response["error"] = true;
-                $response["message"] = "Sorry, this email already existed";
+                $response["message"] = "Desculpe, esse endereço de e-mail já existe";
             }
             // echo json response
             echoRespnse(201, $response);
@@ -118,12 +118,12 @@ $app->post('/login', function() use ($app) {
                 } else {
                     // unknown error occurred
                     $response['error'] = true;
-                    $response['message'] = "An error occurred. Please try again";
+                    $response['message'] = "Ocorreu um Erro. Por Favor, Tente Novamente";
                 }
             } else {
                 // user credentials are wrong
                 $response['error'] = true;
-                $response['message'] = 'Login failed. Incorrect credentials';
+                $response['message'] = 'Falha ao Logar. E-mail ou Senha Incorretos';
             }
 
             echoRespnse(200, $response);
