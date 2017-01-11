@@ -6,7 +6,7 @@ Aplicação que tem como finalidade fornecer formas alternativas de interação 
 
 ## Serviços do Webservice
 
-### Registro
-### Login
-### Estatísticas de Consultas Votadas
-### Listagem das Consultas Públicas
+- Registro
+- Login
+- Estatísticas de Consultas Votadas
+- Listagem das Consultas Públicas
