@@ -8,5 +8,8 @@ Aplicação que tem como finalidade fornecer formas alternativas de interação 
 
 - Registro
 - Login
-- Estatísticas de Consultas Votadas
 - Listagem das Consultas Públicas
+- Opinar sobre Consulta Pública
+- Estatísticas de Consultas Votadas
+
+Mais informações em https://github.com/fabriciolima31/webserviceSenapp/wiki
