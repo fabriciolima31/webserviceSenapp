@@ -67,12 +67,13 @@ $app->post('/register', function() use ($app) {
             $name = $app->request->post('name');
             $email = $app->request->post('email');
             $password = $app->request->post('password');
+            $uf = $app->request->post('uf');
 
             // validating email address
             validateEmail($email);
 
             $db = new DbHandler();
-            $res = $db->createUser($name, $email, $password);
+            $res = $db->createUser($name, $email, $password, $uf);
 
             if ($res == USER_CREATED_SUCCESSFULLY) {
                 $response["error"] = false;

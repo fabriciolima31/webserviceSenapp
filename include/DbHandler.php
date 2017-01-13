@@ -26,7 +26,7 @@ class DbHandler {
      * @param String $email User login email id
      * @param String $password User login password
      */
-    public function createUser($name, $email, $password) {
+    public function createUser($name, $email, $password, $uf) {
         require_once 'PassHash.php';
         $response = array();
 
@@ -39,8 +39,8 @@ class DbHandler {
             $api_key = $this->generateApiKey();
 
             // insert query
-            $stmt = $this->conn->prepare("INSERT INTO users(name, email, password_hash, api_key, status) values(?, ?, ?, ?, 1)");
-            $stmt->bind_param("ssss", $name, $email, $password_hash, $api_key);
+            $stmt = $this->conn->prepare("INSERT INTO users(name, email, password_hash, api_key, status, uf) values(?, ?, ?, ?, 1, ?)");
+            $stmt->bind_param("sssss", $name, $email, $password_hash, $api_key, $uf);
 
             $result = $stmt->execute();
 
