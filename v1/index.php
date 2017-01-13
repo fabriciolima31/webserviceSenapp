@@ -20,13 +20,12 @@ function authenticate(\Slim\Route $route) {
     $headers = apache_request_headers();
     $response = array();
     $app = \Slim\Slim::getInstance();
-
-    // Verifying Authorization Header
-    if (isset($headers['Authorization'])) {
+    // Verifying authorization Header
+    if (isset($headers['authorization'])) {
         $db = new DbHandler();
 
         // get the api key
-        $api_key = $headers['Authorization'];
+        $api_key = $headers['authorization'];
         // validating api key
         if (!$db->isValidApiKey($api_key)) {
             // api key is not present in users table
@@ -55,7 +54,7 @@ function authenticate(\Slim\Route $route) {
  * User Registration
  * url - /register
  * method - POST
- * params - name, email, password
+ * params - name, email, password, uf
  */
 $app->post('/register', function() use ($app) {
             // check for required params
@@ -135,29 +134,24 @@ $app->post('/login', function() use ($app) {
  */
 
 /**
- * Listing all tasks of particual user
+ * Listing all querys names
  * method GET
- * url /tasks          
  */
-$app->get('/tasks', 'authenticate', function() {
+$app->get('/listQuery', 'authenticate', function() {
             global $user_id;
             $response = array();
             $db = new DbHandler();
 
             // fetching all user tasks
-            $result = $db->getAllUserTasks($user_id);
+            $result = $db->getAllQuerysName();
 
             $response["error"] = false;
-            $response["tasks"] = array();
+            $response["query"] = [];
 
             // looping through result and preparing tasks array
-            while ($task = $result->fetch_assoc()) {
+            while ($query = $result->fetch_assoc()) {
                 $tmp = array();
-                $tmp["id"] = $task["id"];
-                $tmp["task"] = $task["task"];
-                $tmp["status"] = $task["status"];
-                $tmp["createdAt"] = $task["created_at"];
-                array_push($response["tasks"], $tmp);
+                array_push($response["query"], $query["nome"]);
             }
 
             echoRespnse(200, $response);

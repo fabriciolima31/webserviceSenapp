@@ -258,16 +258,25 @@ class DbHandler {
     }
 
     /**
-     * Fetching all user tasks
-     * @param String $user_id id of the user
+     * Fetching all Query
      */
-    public function getAllUserTasks($user_id) {
-        $stmt = $this->conn->prepare("SELECT t.* FROM tasks t, user_tasks ut WHERE t.id = ut.task_id AND ut.user_id = ?");
-        $stmt->bind_param("i", $user_id);
+    public function getAllQuerys() {
+        $stmt = $this->conn->prepare("SELECT c.* FROM consulta c WHERE c.status = 1");
         $stmt->execute();
-        $tasks = $stmt->get_result();
+        $query = $stmt->get_result();
         $stmt->close();
-        return $tasks;
+        return $query;
+    }
+    
+    /**
+     * Fetching all Query
+     */
+    public function getAllQuerysName() {
+        $stmt = $this->conn->prepare("SELECT c.id, c.nome FROM consulta c WHERE c.status = 1");
+        $stmt->execute();
+        $query = $stmt->get_result();
+        $stmt->close();
+        return $query;
     }
 
     /**
