@@ -137,7 +137,7 @@ $app->post('/login', function() use ($app) {
  * Listing all querys names
  * method GET
  */
-$app->get('/listQuery', 'authenticate', function() {
+$app->get('/listConsulta', 'authenticate', function() {
             global $user_id;
             $response = array();
             $db = new DbHandler();
@@ -157,119 +157,152 @@ $app->get('/listQuery', 'authenticate', function() {
             echoRespnse(200, $response);
         });
 
-/**
- * Listing single task of particual user
- * method GET
- * url /tasks/:id
- * Will return 404 if the task doesn't belongs to user
- */
-$app->get('/tasks/:id', 'authenticate', function($task_id) {
-            global $user_id;
-            $response = array();
-            $db = new DbHandler();
-
-            // fetch task
-            $result = $db->getTask($task_id, $user_id);
-
-            if ($result != NULL) {
-                $response["error"] = false;
-                $response["id"] = $result["id"];
-                $response["task"] = $result["task"];
-                $response["status"] = $result["status"];
-                $response["createdAt"] = $result["created_at"];
-                echoRespnse(200, $response);
-            } else {
-                $response["error"] = true;
-                $response["message"] = "The requested resource doesn't exists";
-                echoRespnse(404, $response);
-            }
-        });
 
 /**
- * Creating new task in db
+ * Creating new parecer in db
  * method POST
- * params - name
- * url - /tasks/
+ * params - nome
+ * url - /parecer/
  */
-$app->post('/tasks', 'authenticate', function() use ($app) {
+$app->post('/darParecer', 'authenticate', function() use ($app) {
             // check for required params
-            verifyRequiredParams(array('task'));
+            verifyRequiredParams(array('id_consulta', 'estrelas', 'voto', 'comentario'));
 
             $response = array();
-            $task = $app->request->post('task');
+            $id_consulta = $app->request->post('id_consulta');
+            $estrelas = $app->request->post('estrelas');
+            $voto = $app->request->post('voto');
+            $comentario = $app->request->post('comentario');
 
             global $user_id;
             $db = new DbHandler();
 
-            // creating new task
-            $task_id = $db->createTask($user_id, $task);
+            // creating new parecer
+            $parecer_id = $db->createParecer($user_id, $id_consulta, $estrelas, $voto, $comentario);
 
-            if ($task_id != NULL) {
+            if ($parecer_id) {
                 $response["error"] = false;
-                $response["message"] = "Task created successfully";
-                $response["task_id"] = $task_id;
+                $response["message"] = "Parecer salvo com sucesso!";
                 echoRespnse(201, $response);
             } else {
                 $response["error"] = true;
-                $response["message"] = "Failed to create task. Please try again";
+                $response["message"] = "Falha ao salvar parecer. Por favor tente novamente";
                 echoRespnse(200, $response);
             }            
         });
 
-/**
- * Updating existing task
- * method PUT
- * params task, status
- * url - /tasks/:id
+
+ /**
+ * Return all info parecer for id
+ * method GET
+ * url /buscarParecer/:id
  */
-$app->put('/tasks/:id', 'authenticate', function($task_id) use($app) {
-            // check for required params
-            verifyRequiredParams(array('task', 'status'));
-
-            global $user_id;            
-            $task = $app->request->put('task');
-            $status = $app->request->put('status');
-
-            $db = new DbHandler();
-            $response = array();
-
-            // updating task
-            $result = $db->updateTask($user_id, $task_id, $task, $status);
-            if ($result) {
-                // task updated successfully
-                $response["error"] = false;
-                $response["message"] = "Task updated successfully";
-            } else {
-                // task failed to update
-                $response["error"] = true;
-                $response["message"] = "Task failed to update. Please try again!";
-            }
-            echoRespnse(200, $response);
-        });
-
-/**
- * Deleting task. Users can delete only their tasks
- * method DELETE
- * url /tasks
- */
-$app->delete('/tasks/:id', 'authenticate', function($task_id) use($app) {
+$app->get('/estatisticaConsulta/:id', 'authenticate', function($id_consulta) {
             global $user_id;
-
-            $db = new DbHandler();
             $response = array();
-            $result = $db->deleteTask($user_id, $task_id);
-            if ($result) {
-                // task deleted successfully
-                $response["error"] = false;
-                $response["message"] = "Task deleted succesfully";
+            $db = new DbHandler();
+
+            // fetch parecer
+            $result = $db->getParecerId($id_consulta);
+
+            if ($result != NULL) {
+                $response = $result;
             } else {
-                // task failed to delete
-                $response["error"] = true;
-                $response["message"] = "Task failed to delete. Please try again!";
+                // unknown error occurred
+                $response['error'] = true;
+                $response['message'] = "Ocorreu um Erro. Por Favor, Tente Novamente";
             }
             echoRespnse(200, $response);
         });
 
+
+/**
+ * Return status parecer
+ * method GET
+ * url /statusParecer/:id
+ */
+$app->get('/statusParecer/:id', 'authenticate', function($id_consulta) {
+            global $user_id;
+            $response = array();
+            $db = new DbHandler();
+
+            // fetch parecer
+            $result = $db->statusParecer($user_id, $id_consulta);
+
+            if ($result == 0) {
+                $response["status"] = 0;
+                
+            } else {
+                $response["status"] = 1;
+            }
+            echoRespnse(200, $response);
+        });
+        
+ /**
+ * Return all info parecer for nome_consulta
+ * method POST
+ * params - nome_consulta
+ * url - /parecer/
+ */
+$app->post('/infoConsulta', 'authenticate', function() use ($app) {
+            // check for required params
+            verifyRequiredParams(array('nome_consulta'));
+
+            $response = array();
+            $nome_consulta = $app->request->post('nome_consulta');
+
+            //global $user_id;
+            $db = new DbHandler();
+
+            // creating new parecer
+            $consulta = $db->getConsultaByNome($nome_consulta);
+
+            if ($consulta) {
+                $response["error"] = false;
+                $response["id"] = $consulta['id'];
+                $response["autor"] = $consulta['autor'];
+                $response["explicacao_ementa"] = $consulta['explicacao_ementa'];
+                $response["nome"] = $consulta['nome'];
+                $response["ementa"] = $consulta['ementa'];
+                echoRespnse(200, $response);
+            } else {
+                $response["error"] = true;
+                $response["message"] = "Consulta Não Encontrada.";
+                echoRespnse(200, $response);
+            }            
+        });
+        
+$app->post('/infoParecer', 'authenticate', function() use ($app) {
+        // check for required params
+        verifyRequiredParams(array('nome_consulta'));
+
+        $response = array();
+        $nome_consulta = $app->request->post('nome_consulta');
+
+        global $user_id;
+        $db = new DbHandler();
+
+        // creating new parecer
+        $consulta = $db->getParecerByConsulta($user_id, $nome_consulta);
+
+        if ($consulta != NULL) {
+            $response["error"] = false;
+            $response["id"] = $consulta['id'];
+            $response["autor"] = $consulta['autor'];
+            $response["explicacao_ementa"] = $consulta['explicacao_ementa'];
+            $response["nome"] = $consulta['nome'];
+            $response["ementa"] = $consulta['ementa'];
+            $response["estrelas"] = $consulta['estrelas'];
+            $response["voto"] = $consulta['voto'];
+            $response["comentario"] = $consulta['comentario'];
+            echoRespnse(200, $response);
+        } else {
+            $response["error"] = true;
+            $response["message"] = "Consulta Não Encontrada.";
+            echoRespnse(200, $response);
+        }            
+    });
+        
 /**
  * Verifying required params posted or not
  */
@@ -296,7 +329,7 @@ function verifyRequiredParams($required_fields) {
         $response = array();
         $app = \Slim\Slim::getInstance();
         $response["error"] = true;
-        $response["message"] = 'Required field(s) ' . substr($error_fields, 0, -2) . ' is missing or empty';
+        $response["message"] = 'Campos Obrigatórios ' . substr($error_fields, 0, -2) . ' estão Em Branco';
         echoRespnse(400, $response);
         $app->stop();
     }

@@ -202,56 +202,174 @@ class DbHandler {
         return md5(uniqid(rand(), true));
     }
 
-    /* ------------- `tasks` table method ------------------ */
+    /* ------------- `parecer` table method ------------------ */
 
     /**
-     * Creating new task
-     * @param String $user_id user id to whom task belongs to
-     * @param String $task task text
+     * Creating new parecer
      */
-    public function createTask($user_id, $task) {
-        $stmt = $this->conn->prepare("INSERT INTO tasks(task) VALUES(?)");
-        $stmt->bind_param("s", $task);
-        $result = $stmt->execute();
-        $stmt->close();
+    public function createParecer($id_user, $id_consulta, $estrelas, $voto, $comentario) {
+        if(!$this->statusParecer($id_user, $id_consulta)){
+            $stmt = $this->conn->prepare("INSERT INTO parecer(id_usuario, id_consulta, estrelas, voto, comentario) VALUES(?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssss", $id_user, $id_consulta, $estrelas, $voto, $comentario);
+            $result = $stmt->execute();
+            $stmt->close();
+        }else{
+            $result = NULL;
+        }
 
         if ($result) {
-            // task row created
-            // now assign the task to user
-            $new_task_id = $this->conn->insert_id;
-            $res = $this->createUserTask($user_id, $new_task_id);
-            if ($res) {
-                // task created successfully
-                return $new_task_id;
-            } else {
-                // task failed to create
-                return NULL;
-            }
+            // parecer success to create
+            return true;
         } else {
-            // task failed to create
+            // parecer failed to create
+            return false;
+        }
+    }
+    
+    
+    /**
+     * Checking for user parece
+     * @param String $id_usuario 
+     * @param String $id_consulta 
+     * @return boolean
+     */
+    public function statusParecer($id_user, $id_consulta) {
+        $stmt = $this->conn->prepare("SELECT id from parecer WHERE id_usuario = ? AND id_consulta = ?");
+        $stmt->bind_param("ss", $id_user, $id_consulta);
+        $stmt->execute();
+        $stmt->store_result();
+        $num_rows = $stmt->num_rows;
+        $stmt->close();
+        return $num_rows > 0;
+    }
+    
+    /**
+     * Fetching user by email
+     * @param String $email User email id
+     */
+    public function getConsultaByNome($nome_consulta) {
+        $stmt = $this->conn->prepare("SELECT id, autor, explicacao_ementa, nome, ementa FROM consulta WHERE nome = ? AND status = 1");
+        $stmt->bind_param("s", $nome_consulta);
+        if ($stmt->execute()) {
+            // $user = $stmt->get_result()->fetch_assoc();
+            $stmt->bind_result($id, $autor, $explicacao_ementa, $nome, $ementa);
+            $stmt->fetch();
+            $consulta = array();
+            if($id != NULL){
+                $consulta["id"] = $id;
+                $consulta["autor"] = $autor;
+                $consulta["explicacao_ementa"] = $explicacao_ementa;
+                $consulta["nome"] = $nome;
+                $consulta["ementa"] = $ementa;
+            }else{
+                $consulta = NULL;
+            }
+            $stmt->close();
+            return $consulta;
+        } else {
             return NULL;
         }
     }
-
-    /**
-     * Fetching single task
-     * @param String $task_id id of the task
+    
+     /**
+     * Fetching user by email
+     * @param String $email User email id
      */
-    public function getTask($task_id, $user_id) {
-        $stmt = $this->conn->prepare("SELECT t.id, t.task, t.status, t.created_at from tasks t, user_tasks ut WHERE t.id = ? AND ut.task_id = t.id AND ut.user_id = ?");
-        $stmt->bind_param("ii", $task_id, $user_id);
+    public function getParecerByConsulta($id_user, $nome_consulta) {
+        $consulta = array();
+        $tmp = $this->getConsultaByNome($nome_consulta);
+        if($tmp == NULL) return NULL;
+        $consulta["id"] = $tmp['id'];
+        $consulta["autor"] = $tmp['autor'];
+        $consulta["explicacao_ementa"] = $tmp['explicacao_ementa'];
+        $consulta["nome"] = $tmp['nome'];
+        $consulta["ementa"] = $tmp['ementa'];
+        $consulta["estrelas"] = "";
+        $consulta["voto"] = "";
+        $consulta["comentario"] = "";
+        $stmt = $this->conn->prepare("SELECT estrelas, voto, comentario FROM parecer WHERE id_usuario = ? AND id_consulta = ?");
+        $stmt->bind_param("ss", $id_user, $tmp['id']);
+        $stmt->execute();
+        // $user = $stmt->get_result()->fetch_assoc();
+        $stmt->bind_result($estrelas, $voto, $comentario);
+        $stmt->fetch();
+        if($estrelas != NULL){
+            $consulta["estrelas"] = $estrelas;
+            $consulta["voto"] = $voto;
+            $consulta["comentario"] = $comentario;
+        }
+        $stmt->close();
+        return $consulta;
+    }
+    
+    /**
+     * Fetching user by email
+     * @param String $email User email id
+     */
+    public function getParecerId($id_consulta) {
+        $stmt = $this->conn->prepare("SELECT c.id, c.autor, c.explicacao_ementa, c.nome, c.ementa FROM consulta c WHERE c.id = ? AND status = 1");
+        $stmt->bind_param("s", $id_consulta);
         if ($stmt->execute()) {
-            $res = array();
-            $stmt->bind_result($id, $task, $status, $created_at);
-            // TODO
-            // $task = $stmt->get_result()->fetch_assoc();
+            // $user = $stmt->get_result()->fetch_assoc();
+            $stmt->bind_result($id, $autor, $explicacao_ementa, $nome, $ementa);
             $stmt->fetch();
-            $res["id"] = $id;
-            $res["task"] = $task;
-            $res["status"] = $status;
-            $res["created_at"] = $created_at;
+            $consulta = array();
+            if($id != NULL){
+                $consulta["id"] = $id;
+                $consulta["autor"] = $autor;
+                $consulta["explicacao_ementa"] = $explicacao_ementa;
+                $consulta["nome"] = $nome;
+                $consulta["ementa"] = $ementa;
+            }else{
+                return NULL;
+            }
             $stmt->close();
-            return $res;
+        } else {
+            return NULL;
+        }
+        
+        $consulta["qteestrela1"] = 0;
+        $consulta["qteestrela2"] = 0;
+        $consulta["qteestrela3"] = 0;
+        $consulta["qteestrela4"] = 0;
+        $consulta["qteestrela5"] = 0;
+        $consulta["qtesim"] = 0;
+        $consulta["qtenao"] = 0;
+        $consulta['comentarios'] = array();
+        $stmt = $this->conn->prepare("SELECT estrelas, voto, comentario FROM parecer WHERE id_consulta = ?");
+        $stmt->bind_param("s", $id_consulta);
+        if ($stmt->execute()) {
+           $result = $stmt->get_result();
+           while ($item = $result->fetch_assoc()) {
+               switch ($item['estrelas']) {
+                    case 1:
+                        $consulta["qteestrela1"]++;
+                        break;
+                    case 2:
+                        $consulta["qteestrela2"]++;
+                        break;
+                    case 3:
+                        $consulta["qteestrela3"]++;
+                        break;
+                    case 4:
+                        $consulta["qteestrela4"]++;
+                        break;
+                    case 5:
+                        $consulta["qteestrela5"]++;
+                        break;
+                }
+                switch ($item['voto']) {
+                    case 0:
+                        $consulta["qtesim"]++;
+                        break;
+                    case 1:
+                        $consulta["qtenao"]++;
+                        break;
+                }
+                array_push($consulta['comentarios'], $item['comentario']);
+           }
+            $stmt->close();
+            return $consulta;
         } else {
             return NULL;
         }
